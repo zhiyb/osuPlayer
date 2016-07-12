@@ -1,0 +1,45 @@
+﻿<Page
+    x:Class="osuPlayer.MainPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:osuPlayer"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <RelativePanel x:Name="panel" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+        <ListBox x:Name="debug"
+                 RelativePanel.AlignTopWithPanel="True" RelativePanel.AlignBottomWithPanel="True"
+                 RelativePanel.AlignLeftWithPanel="True" RelativePanel.AlignRightWithPanel="True"/>
+        <StackPanel RelativePanel.AlignHorizontalCenterWithPanel="True" RelativePanel.AlignVerticalCenterWithPanel="True">
+            <Button Content="Open" FontSize="60"
+                    IsEnabled="{x:Bind ViewModel.isLoading.nLoading, Mode=OneWay}"
+                    Click="test"/>
+        </StackPanel>
+        <Rectangle Fill="white" Opacity="0.5"
+                   Visibility="{x:Bind ViewModel.isLoading.isVisible, Mode=OneWay}"
+                   RelativePanel.AlignTopWithPanel="True" RelativePanel.AlignBottomWithPanel="True"
+                   RelativePanel.AlignLeftWithPanel="True" RelativePanel.AlignRightWithPanel="True"/>
+        <Grid Visibility="{x:Bind ViewModel.isLoading.isVisible, Mode=OneWay}"
+              RelativePanel.AlignTopWithPanel="True" RelativePanel.AlignBottomWithPanel="True"
+              RelativePanel.AlignLeftWithPanel="True" RelativePanel.AlignRightWithPanel="True">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="1*"/>
+                <RowDefinition Height="2*"/>
+                <RowDefinition Height="1*"/>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="2*"/>
+                <ColumnDefinition Width="1*"/>
+            </Grid.ColumnDefinitions>
+            <ProgressRing Grid.Row="1" Grid.Column="1"
+                          IsActive="{x:Bind ViewModel.isLoading.isLoading, Mode=OneWay}"
+                          Visibility="{x:Bind ViewModel.isLoading.isVisible, Mode=OneWay}"
+                          HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+        </Grid>
+        <Button Content="DEBUG" FontSize="32"
+                RelativePanel.AlignBottomWithPanel="True" RelativePanel.AlignRightWithPanel="True"
+                Click="debugClick"/>
+    </RelativePanel>
+</Page>
