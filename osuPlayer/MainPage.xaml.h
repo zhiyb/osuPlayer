@@ -67,11 +67,12 @@ namespace osuPlayer
 	private:
 		void test(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e);
 		void changeDir(Windows::Storage::StorageFolder^ dir);
+		void osuLoaded();
 
 		osuPlayer::ViewModel^ viewModel;
 		Windows::Storage::StorageFolder^ osuDir;
 		Windows::Storage::StorageFile^ osuDB;
-		osu::osu^ osu;
+		::osu::osu *osuData;
 		void debugClick(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e);
 	};
 }
