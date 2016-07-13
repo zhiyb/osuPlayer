@@ -36,6 +36,19 @@ String^ ::osu::readStringFromReader(DataReader^ reader)
 	return reader->ReadString(size);
 }
 
+void ::osu::readBeatmapFromReader(DataReader ^ reader, osuBeatmap * bmap)
+{
+	int32 size = reader->ReadInt32();
+	auto rder = DataReader::FromBuffer(reader->ReadBuffer(size));
+
+	bmap->artist = readStringFromReader(rder);
+	readStringFromReader(rder);	// Artist in unicode
+	bmap->title = readStringFromReader(rder);
+	readStringFromReader(rder);	// Song title in unicode
+	bmap->creator = readStringFromReader(rder);
+	bmap->difficulty = readStringFromReader(rder);
+}
+
 IAsyncOperation<osuDB^>^ osuDB::loadFromFileAsync(StorageFile ^ file)
 {
 	return create_async([=]() -> osuDB^ {
@@ -56,14 +69,20 @@ IAsyncOperation<osuDB^>^ osuDB::loadFromFileAsync(StorageFile ^ file)
 			reader->UnicodeEncoding = UnicodeEncoding::Utf8;
 			reader->ByteOrder = ByteOrder::LittleEndian;
 			return reader->LoadAsync(size);
-		}).then([&](auto count) {
+		}).then([&](auto size) {
 			// https://osu.ppy.sh/wiki/Db_(file_format)
-			db->_version = reader->ReadInt32();
-			db->_folderCount = reader->ReadInt32();
-			db->_unlocked = reader->ReadBoolean();
+			db->version = reader->ReadInt32();
+			db->folderCount = reader->ReadInt32();
+			db->unlocked = reader->ReadBoolean();
 			reader->ReadInt64();	// Date the account will be unlocked
-			db->_playerName = readStringFromReader(reader);
-			db->_bmapCount = reader->ReadInt32();
+			db->playerName = readStringFromReader(reader);
+			db->bmapCount = reader->ReadInt32();
+			int count = db->bmapCount;
+			while (count--) {
+				osuBeatmap *bmap = new osuBeatmap;
+				readBeatmapFromReader(reader, bmap);
+				db->bmaps.push_back(bmap);
+			}
 		}).wait();
 		return db;
 	});

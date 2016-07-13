@@ -19,6 +19,7 @@ using namespace Windows::UI::Xaml::Input;
 using namespace Windows::UI::Xaml::Media;
 using namespace Windows::UI::Xaml::Navigation;
 
+using namespace osu;
 using namespace concurrency;
 using namespace Windows::UI::Popups;
 using namespace Windows::Storage;
@@ -41,14 +42,13 @@ MainPage::MainPage() :
 		viewModel->isLoading->isLoading = false;
 	} else {
 		create_task(StorageFolder::GetFolderFromPathAsync(path)).then([=](StorageFolder^ folder) {
-			return osu::osu::loadFromFolderAsync(folder);
-		}).then([=](osu::osu^ o) {
-			osu = o;
+			return ::osu::osu::loadFromFolderAsync(folder);
+		}).then([=](::osu::osu^ o) {
+			this->osu = o;
 			viewModel->isLoading->isLoading = false;
 		});
 	}
 }
-
 
 void osuPlayer::MainPage::test(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e)
 {
@@ -59,14 +59,18 @@ void osuPlayer::MainPage::test(Platform::Object^ sender, Windows::UI::Xaml::Rout
 		if (dir) {
 			viewModel->isLoading->isLoading = true;
 			debug->Items->Append("Picked: " + dir->Path);
-			create_task(osu::osu::loadFromFolderAsync(dir)).then([this](osu::osu^ o) {
+			create_task(::osu::osu::loadFromFolderAsync(dir)).then([this](::osu::osu^ o) {
 				if (o) {
-					osu = o;
-					debug->Items->Append("osu! Version: " + o->db->version + "\n"
-						"Folders: " + o->db->folderCount + "\n"
-						"Unlocked: " + o->db->unlocked + "\n"
-						"Player name: " + o->db->playerName + "\n"
-						"Beatmaps: " + o->db->bmapCount + "\n");
+					this->osu = o;
+					debug->Items->Append("osu! Version: " + o->db->Version + "\n"
+						"Folders: " + o->db->FolderCount + "\n"
+						"Unlocked: " + o->db->Unlocked + "\n"
+						"Player name: " + o->db->PlayerName + "\n"
+						"Beatmaps: " + o->db->BeatmapCount + "\n");
+					int count = o->db->BeatmapCount;
+					auto bmaps = o->db->beatmaps();
+					for (auto bmap : bmaps)
+						debug->Items->Append(bmap->title);
 				}
 				viewModel->isLoading->isLoading = false;
 			});
