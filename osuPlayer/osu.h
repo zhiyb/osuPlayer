@@ -26,6 +26,9 @@ namespace osu
 
 	struct osuBeatmap
 	{
+		String^ getArtist() { return artistUnicode ? artistUnicode : artist; }
+		String^ getTitle() { return titleUnicode ? titleUnicode : title; }
+
 		String ^artist, ^artistUnicode, ^title, ^titleUnicode, ^creator;
 		String ^difficulty;
 		String ^audioFile, ^hash, ^osuFile;
@@ -74,8 +77,12 @@ namespace osu
 
 	struct osu
 	{
-		osuDB db;
 		bool valid;
+		osuDB db;
+
+		StorageFile ^fileDB;
+		StorageFolder ^dir;
+		StorageFolder ^dirSongs;
 	};
 
 	unsigned int readULEB128FromReader(DataReader^ reader);

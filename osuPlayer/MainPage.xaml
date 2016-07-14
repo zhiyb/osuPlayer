@@ -13,14 +13,14 @@
                  RelativePanel.AlignLeftWithPanel="True" RelativePanel.AlignRightWithPanel="True"/>
         <StackPanel RelativePanel.AlignHorizontalCenterWithPanel="True" RelativePanel.AlignVerticalCenterWithPanel="True">
             <Button Content="Open" FontSize="60"
-                    IsEnabled="{x:Bind ViewModel.isLoading.nLoading, Mode=OneWay}"
+                    IsEnabled="{x:Bind ViewModel.IsLoading.nIsLoading, Mode=OneWay}"
                     Click="test"/>
         </StackPanel>
         <Rectangle Fill="white" Opacity="0.5"
-                   Visibility="{x:Bind ViewModel.isLoading.isVisible, Mode=OneWay}"
+                   Visibility="{x:Bind ViewModel.IsLoading.IsVisible, Mode=OneWay}"
                    RelativePanel.AlignTopWithPanel="True" RelativePanel.AlignBottomWithPanel="True"
                    RelativePanel.AlignLeftWithPanel="True" RelativePanel.AlignRightWithPanel="True"/>
-        <Grid Visibility="{x:Bind ViewModel.isLoading.isVisible, Mode=OneWay}"
+        <Grid Visibility="{x:Bind ViewModel.IsLoading.IsVisible, Mode=OneWay}"
               RelativePanel.AlignTopWithPanel="True" RelativePanel.AlignBottomWithPanel="True"
               RelativePanel.AlignLeftWithPanel="True" RelativePanel.AlignRightWithPanel="True">
             <Grid.RowDefinitions>
@@ -34,10 +34,26 @@
                 <ColumnDefinition Width="1*"/>
             </Grid.ColumnDefinitions>
             <ProgressRing Grid.Row="1" Grid.Column="1"
-                          IsActive="{x:Bind ViewModel.isLoading.isLoading, Mode=OneWay}"
-                          Visibility="{x:Bind ViewModel.isLoading.isVisible, Mode=OneWay}"
+                          IsActive="{x:Bind ViewModel.IsLoading.IsLoading, Mode=OneWay}"
+                          Visibility="{x:Bind ViewModel.IsLoading.IsVisible, Mode=OneWay}"
                           HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
         </Grid>
+        <ListView x:Name="playlist" Width="320" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
+                  RelativePanel.AlignLeftWithPanel="True"
+                  RelativePanel.AlignTopWithPanel="True" RelativePanel.AlignBottomWithPanel="True"
+                  ItemsSource="{x:Bind ViewModel.Musics, Mode=OneWay}" SelectionChanged="musicSelected">
+            <ListView.ItemTemplate>
+                <DataTemplate x:DataType="local:Music">
+                    <StackPanel Orientation="Horizontal" Margin="4">
+                        <SymbolIcon Symbol="Audio" Margin="0,0,12,0"/>
+                        <StackPanel>
+                            <TextBlock Text="{x:Bind Title}" FontWeight="Bold"/>
+                            <TextBlock Text="{x:Bind Artist}"/>
+                        </StackPanel>
+                    </StackPanel>
+                </DataTemplate>
+            </ListView.ItemTemplate>
+        </ListView>
         <Button Content="DEBUG" FontSize="32"
                 RelativePanel.AlignBottomWithPanel="True" RelativePanel.AlignRightWithPanel="True"
                 Click="debugClick"/>

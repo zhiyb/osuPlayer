@@ -178,15 +178,26 @@ IAsyncOperation<bool>^ ::osu::loadFromFolderAsync(StorageFolder^ folder, ::osu::
 			return false;
 
 		o->valid = false;
-		create_task(folder->GetFileAsync("osu!.db")).then([&](task<StorageFile^> t) -> IAsyncOperation<bool>^ {
+		o->dir = folder;
+		create_task(folder->GetFileAsync("osu!.db")).then([&](task<StorageFile^> t) {
 			StorageFile^ file;
 			try {
 				file = t.get();
-			} catch (Platform::COMException^ e) {
-				//debug->Items->Append("Unable to open osu!.db from the specified directory: " + e->Message);
+			} catch (COMException^ e) {
+				return;
+			}
+			o->fileDB = file;
+		}).then([=] {
+			return folder->GetFolderAsync("Songs");
+		}).then([=](task<StorageFolder^> t) -> IAsyncOperation<bool>^ {
+			StorageFolder^ folder;
+			try {
+				folder = t.get();
+			} catch (COMException^ e) {
 				return create_async([] {return false; });
 			}
-			return loadDBFromFileAsync(file, &o->db);
+			o->dirSongs = folder;
+			return loadDBFromFileAsync(o->fileDB, &o->db);
 		}).then([&](bool res) {
 			o->valid = res;
 		}).wait();

@@ -5,6 +5,9 @@
 
 #include "pch.h"
 #include "MainPage.xaml.h"
+#include "DebugPage.xaml.h"
+
+#define ENABLE_DEBUG
 
 using namespace osuPlayer;
 
@@ -21,22 +24,44 @@ using namespace Windows::UI::Xaml::Navigation;
 
 using namespace osu;
 using namespace concurrency;
+using namespace Windows::ApplicationModel::Core;
 using namespace Windows::UI::Popups;
+using namespace Windows::UI::ViewManagement;
+using namespace Windows::UI::Xaml::Interop;
 using namespace Windows::Storage;
 using namespace Windows::Storage::Pickers;
 
-MainPage::MainPage() :
-	osuDir(nullptr), osuDB(nullptr)
+MainPage::MainPage()
 {
 	osuData = new ::osu::osu;
 	viewModel = ref new osuPlayer::ViewModel;
-	viewModel->isLoading->isLoading = true;
+	viewModel->IsLoading->IsLoading = true;
+	debugParams = ref new Debug::DebugParams;
 	InitializeComponent();
+
+#ifdef ENABLE_DEBUG
+	// The debug window
+	auto dispatcher = Window::Current->Dispatcher;
+	auto debugView = CoreApplication::CreateNewView();
+	int debugViewID = 0;
+	debugView->Dispatcher->RunAsync(CoreDispatcherPriority::Normal, ref new DispatchedHandler([&] {
+		Controls::Frame^ frame = ref new Controls::Frame;
+		frame->Navigate(TypeName(Debug::DebugPage::typeid), debugParams);
+		// Active the window to show it later
+		Window::Current->Content = frame;
+		Window::Current->Activate();
+		debugViewID = ApplicationView::GetForCurrentView()->Id;
+
+		dispatcher->RunAsync(CoreDispatcherPriority::Normal, ref new DispatchedHandler([=] {
+			ApplicationViewSwitcher::TryShowAsStandaloneAsync(debugViewID);
+		}));
+	}));
+#endif
 
 	auto localSettings = ApplicationData::Current->LocalSettings;
 	auto path = safe_cast<String^>(localSettings->Values->Lookup("osu!Path"));
 
-	viewModel->isLoading->isLoading = !!path;
+	viewModel->IsLoading->IsLoading = !!path;
 	if (path) {
 		create_task(StorageFolder::GetFolderFromPathAsync(path)).then([=](StorageFolder^ folder) {
 			return ::osu::loadFromFolderAsync(folder, osuData);
@@ -56,7 +81,7 @@ MainPage::MainPage() :
 				msg->Commands->Append(ref new UICommand("Ok"));
 				msg->ShowAsync();
 			}
-			viewModel->isLoading->isLoading = false;
+			viewModel->IsLoading->IsLoading = false;
 		});
 	}
 }
@@ -68,7 +93,7 @@ void osuPlayer::MainPage::test(Platform::Object^ sender, Windows::UI::Xaml::Rout
 	picker->FileTypeFilter->Append(".db");
 	create_task(picker->PickSingleFolderAsync()).then([this](StorageFolder^ dir) {
 		if (dir) {
-			viewModel->isLoading->isLoading = true;
+			viewModel->IsLoading->IsLoading = true;
 			debug->Items->Append("Picked: " + dir->Path);
 			::osu::osu *o = new ::osu::osu;
 			create_task(::osu::loadFromFolderAsync(dir, o)).then([=](bool res) {
@@ -81,7 +106,7 @@ void osuPlayer::MainPage::test(Platform::Object^ sender, Windows::UI::Xaml::Rout
 					osuData = o;
 					osuLoaded();
 				}
-				viewModel->isLoading->isLoading = false;
+				viewModel->IsLoading->IsLoading = false;
 			});
 		}
 	});
@@ -91,24 +116,74 @@ void osuPlayer::MainPage::test(Platform::Object^ sender, Windows::UI::Xaml::Rout
 void osuPlayer::MainPage::osuLoaded()
 {
 	auto o = osuData;
-	debug->Items->Append("osu! Version: " + o->db.version + "\n"
-		"Folders: " + o->db.folderCount + "\n"
-		"Unlocked: " + o->db.unlocked + "\n"
-		"Player name: " + o->db.playerName + "\n"
-		"Beatmaps: " + o->db.bmapCount + "\n");
+#ifdef ENABLE_DEBUG
+#if 0
+	if (debugParams->Debug)
+		debugParams->Dispatcher->RunAsync(CoreDispatcherPriority::Normal, ref new DispatchedHandler([=] {
+			debugParams->Debug->Items->Append("osu! Version: " + o->db.version + "\n"
+				"Folders: " + o->db.folderCount + "\n"
+				"Unlocked: " + o->db.unlocked + "\n"
+				"Player name: " + o->db.playerName + "\n"
+				"Beatmaps: " + o->db.bmapCount + "\n");
+		}));
+#else
+#if 1
+	debugParams->Dispatcher->RunAsync(CoreDispatcherPriority::Normal, ref new DispatchedHandler([=] {
+		debugParams->ViewModel->List->Append("osu! Version: " + o->db.version + "\n"
+			"Folders: " + o->db.folderCount + "\n"
+			"Unlocked: " + o->db.unlocked + "\n"
+			"Player name: " + o->db.playerName + "\n"
+			"Beatmaps: " + o->db.bmapCount + "\n");
+	}));
+#else
+	if (debugParams->ViewModel)
+		debugParams->ViewModel->List->Append("osu! Version: " + o->db.version + "\n"
+			"Folders: " + o->db.folderCount + "\n"
+			"Unlocked: " + o->db.unlocked + "\n"
+			"Player name: " + o->db.playerName + "\n"
+			"Beatmaps: " + o->db.bmapCount + "\n");
+#endif
+#endif
+#endif
 
 	int i = 0;
 	int count = o->db.bmapCount;
 	auto bmaps = o->db.bmaps;
-	for (auto bmap : bmaps)
-		debug->Items->Append("No. " + ++i + ":\n"
-			"artist: " + bmap->artist + " / " + bmap->artistUnicode + ", title: " + bmap->title + " / " + bmap->titleUnicode + "\n"
-			"creator: " + bmap->creator + ", difficulty: " + bmap->difficulty + "\n"
-			"audio: " + bmap->audioFile + ", hash: " + bmap->hash + ", .osu: " + bmap->osuFile + "\n"
-			"folder: " + bmap->folder + "\n");
+	for (auto bmap : bmaps) {
+#ifdef ENABLE_DEBUG
+#if 0
+		debug->Items->Append("No. " + ++i + ":\t" + bmap->getTitle() + "\n"
+			"artist: " + bmap->getArtist() + ", creator: " + bmap->creator + " [" + bmap->difficulty + "]\n"
+			"audio: Songs/" + bmap->folder + "/" + bmap->audioFile + "\n"
+			".osu: " + bmap->osuFile + "\n"
+			"source: " + bmap->source + "\n");
+#endif
+#if 0
+		debugParams->ViewModel->List->Append("No. " + ++i + ":\t" + bmap->getTitle() + "\n"
+			"artist: " + bmap->getArtist() + ", creator: " + bmap->creator + " [" + bmap->difficulty + "]\n"
+			"audio: Songs/" + bmap->folder + "/" + bmap->audioFile + "\n"
+			".osu: " + bmap->osuFile + "\n"
+			"source: " + bmap->source + "\n");
+#endif
+#endif
+		ViewModel->Musics->Append(loadMusicFromBeatmap(ViewModel->_useOriginal(), bmap));
+	}
 }
 
 void osuPlayer::MainPage::debugClick(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e)
 {
-	viewModel->isLoading->isLoading = !viewModel->isLoading->isLoading;
+	//viewModel->IsLoading->IsLoading = !viewModel->IsLoading->IsLoading;
+}
+
+Music^ osuPlayer::loadMusicFromBeatmap(IBox<bool>^ useOriginal, ::osu::osuBeatmap *bmap)
+{
+	return ref new Music(useOriginal,
+		bmap->artist, bmap->artistUnicode,
+		bmap->title, bmap->titleUnicode,
+		bmap->folder, bmap->audioFile);
+}
+
+void osuPlayer::MainPage::musicSelected(Platform::Object^ sender, Windows::UI::Xaml::Controls::SelectionChangedEventArgs^ e)
+{
+	;
 }
