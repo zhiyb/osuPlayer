@@ -180,14 +180,11 @@ IAsyncOperation<bool>^ ::osu::loadFromFolderAsync(StorageFolder^ folder, ::osu::
 		o->valid = false;
 		o->dir = folder;
 		create_task(folder->GetFileAsync("osu!.db")).then([&](task<StorageFile^> t) {
-			StorageFile^ file;
+			StorageFile^ file = nullptr;
 			try {
 				file = t.get();
-			} catch (COMException^ e) {
-				return;
-			}
+			} catch (COMException^ e) {}
 			o->fileDB = file;
-		}).then([=] {
 			return folder->GetFolderAsync("Songs");
 		}).then([=](task<StorageFolder^> t) -> IAsyncOperation<bool>^ {
 			StorageFolder^ folder;

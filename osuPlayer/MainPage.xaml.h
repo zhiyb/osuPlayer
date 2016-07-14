@@ -31,6 +31,8 @@ namespace osuPlayer
 
 		property String^ Artist {String^ get() { return (useOriginal && artistOriginal) ? artistOriginal : artist; }}
 		property String^ Title {String^ get() { return (useOriginal && titleOriginal) ? titleOriginal : title; }}
+		property String^ Folder {String^ get() { return folder; }}
+		property String^ AudioFile {String^ get() { return audioFile; }}
 
 	private:
 		String ^artist, ^artistOriginal;
@@ -69,13 +71,12 @@ namespace osuPlayer
 	public ref class ViewModel sealed : public INotifyPropertyChanged
 	{
 	public:
-		ViewModel() : isLoading(ref new Loading(true)), useOriginal(ref new Box<bool>(true)) {}
+		ViewModel() : musics(ref new Vector<Music^>), isLoading(ref new Loading(true)), useOriginal(ref new Box<bool>(true)) {}
 		IBox<bool>^ _useOriginal() { return useOriginal; }
 
 		event virtual PropertyChangedEventHandler^ PropertyChanged;
 
-		property IVector<Music^>^ Musics {IVector<Music^>^ get() { if (!musics) musics = ref new Vector<Music^>; return musics; }}
-
+		property IVector<Music^>^ Musics {IVector<Music^>^ get() { return musics; }}
 		property Loading^ IsLoading {Loading^ get() { return isLoading; }}
 		property bool UseOriginal {bool get() { return useOriginal->Value; }}
 
@@ -101,7 +102,7 @@ namespace osuPlayer
 		void debugClick(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e);
 		void musicSelected(Platform::Object^ sender, Windows::UI::Xaml::Controls::SelectionChangedEventArgs^ e);
 
-		Debug::DebugParams^ debugParams;
+		::Debug::DebugParams^ debugParams;
 
 		osuPlayer::ViewModel^ viewModel;
 		::osu::osu *osuData;

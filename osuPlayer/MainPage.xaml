@@ -8,9 +8,6 @@
     mc:Ignorable="d">
 
     <RelativePanel x:Name="panel" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
-        <ListBox x:Name="debug"
-                 RelativePanel.AlignTopWithPanel="True" RelativePanel.AlignBottomWithPanel="True"
-                 RelativePanel.AlignLeftWithPanel="True" RelativePanel.AlignRightWithPanel="True"/>
         <StackPanel RelativePanel.AlignHorizontalCenterWithPanel="True" RelativePanel.AlignVerticalCenterWithPanel="True">
             <Button Content="Open" FontSize="60"
                     IsEnabled="{x:Bind ViewModel.IsLoading.nIsLoading, Mode=OneWay}"
@@ -38,7 +35,7 @@
                           Visibility="{x:Bind ViewModel.IsLoading.IsVisible, Mode=OneWay}"
                           HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
         </Grid>
-        <ListView x:Name="playlist" Width="320" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
+        <ListView x:Name="playlist" Width="320"
                   RelativePanel.AlignLeftWithPanel="True"
                   RelativePanel.AlignTopWithPanel="True" RelativePanel.AlignBottomWithPanel="True"
                   ItemsSource="{x:Bind ViewModel.Musics, Mode=OneWay}" SelectionChanged="musicSelected">

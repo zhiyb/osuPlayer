@@ -9,6 +9,5 @@
 
     <ListBox x:Name="debug" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
              RelativePanel.AlignTopWithPanel="True" RelativePanel.AlignBottomWithPanel="True"
-             RelativePanel.AlignLeftWithPanel="True" RelativePanel.AlignRightWithPanel="True"
-             ItemsSource="{x:Bind ViewModel.List}"/>
+             RelativePanel.AlignLeftWithPanel="True" RelativePanel.AlignRightWithPanel="True"/>
 </Page>

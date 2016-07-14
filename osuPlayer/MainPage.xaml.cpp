@@ -42,15 +42,13 @@ MainPage::MainPage()
 #ifdef ENABLE_DEBUG
 	// The debug window
 	auto dispatcher = Window::Current->Dispatcher;
-	auto debugView = CoreApplication::CreateNewView();
-	int debugViewID = 0;
-	debugView->Dispatcher->RunAsync(CoreDispatcherPriority::Normal, ref new DispatchedHandler([&] {
-		Controls::Frame^ frame = ref new Controls::Frame;
+	CoreApplication::CreateNewView()->Dispatcher->RunAsync(CoreDispatcherPriority::Normal, ref new DispatchedHandler([&] {
+		auto frame = ref new Controls::Frame;
 		frame->Navigate(TypeName(Debug::DebugPage::typeid), debugParams);
 		// Active the window to show it later
 		Window::Current->Content = frame;
 		Window::Current->Activate();
-		debugViewID = ApplicationView::GetForCurrentView()->Id;
+		int debugViewID = ApplicationView::GetForCurrentView()->Id;
 
 		dispatcher->RunAsync(CoreDispatcherPriority::Normal, ref new DispatchedHandler([=] {
 			ApplicationViewSwitcher::TryShowAsStandaloneAsync(debugViewID);
@@ -69,7 +67,7 @@ MainPage::MainPage()
 			if (res) {
 				osuLoaded();
 			} else {
-				MessageDialog^ msg = ref new MessageDialog("This application works by...");
+				auto msg = ref new MessageDialog("This application works by...");
 				msg->Commands->Append(ref new UICommand("Ok"));
 				msg->ShowAsync();
 			}
@@ -77,7 +75,7 @@ MainPage::MainPage()
 			try {
 				t.get();
 			} catch (...) {
-				MessageDialog^ msg = ref new MessageDialog("This application works by...");
+				auto msg = ref new MessageDialog("This application works by...");
 				msg->Commands->Append(ref new UICommand("Ok"));
 				msg->ShowAsync();
 			}
@@ -94,8 +92,10 @@ void osuPlayer::MainPage::test(Platform::Object^ sender, Windows::UI::Xaml::Rout
 	create_task(picker->PickSingleFolderAsync()).then([this](StorageFolder^ dir) {
 		if (dir) {
 			viewModel->IsLoading->IsLoading = true;
-			debug->Items->Append("Picked: " + dir->Path);
-			::osu::osu *o = new ::osu::osu;
+#ifdef ENABLE_DEBUG
+			debugParams->Append("Picked: " + dir->Path);
+#endif
+			auto o = new ::osu::osu;
 			create_task(::osu::loadFromFolderAsync(dir, o)).then([=](bool res) {
 				if (res) {
 					auto localSettings = ApplicationData::Current->LocalSettings;
@@ -110,40 +110,20 @@ void osuPlayer::MainPage::test(Platform::Object^ sender, Windows::UI::Xaml::Rout
 			});
 		}
 	});
-	debug->Items->Append("Returned from test()");
+#ifdef ENABLE_DEBUG
+	debugParams->Append("Returned from test()");
+#endif
 }
 
 void osuPlayer::MainPage::osuLoaded()
 {
 	auto o = osuData;
 #ifdef ENABLE_DEBUG
-#if 0
-	if (debugParams->Debug)
-		debugParams->Dispatcher->RunAsync(CoreDispatcherPriority::Normal, ref new DispatchedHandler([=] {
-			debugParams->Debug->Items->Append("osu! Version: " + o->db.version + "\n"
-				"Folders: " + o->db.folderCount + "\n"
-				"Unlocked: " + o->db.unlocked + "\n"
-				"Player name: " + o->db.playerName + "\n"
-				"Beatmaps: " + o->db.bmapCount + "\n");
-		}));
-#else
-#if 1
-	debugParams->Dispatcher->RunAsync(CoreDispatcherPriority::Normal, ref new DispatchedHandler([=] {
-		debugParams->ViewModel->List->Append("osu! Version: " + o->db.version + "\n"
-			"Folders: " + o->db.folderCount + "\n"
-			"Unlocked: " + o->db.unlocked + "\n"
-			"Player name: " + o->db.playerName + "\n"
-			"Beatmaps: " + o->db.bmapCount + "\n");
-	}));
-#else
-	if (debugParams->ViewModel)
-		debugParams->ViewModel->List->Append("osu! Version: " + o->db.version + "\n"
-			"Folders: " + o->db.folderCount + "\n"
-			"Unlocked: " + o->db.unlocked + "\n"
-			"Player name: " + o->db.playerName + "\n"
-			"Beatmaps: " + o->db.bmapCount + "\n");
-#endif
-#endif
+	debugParams->Append("osu! Version: " + o->db.version + "\n"
+		"Folders: " + o->db.folderCount + "\n"
+		"Unlocked: " + o->db.unlocked + "\n"
+		"Player name: " + o->db.playerName + "\n"
+		"Beatmaps: " + o->db.bmapCount + "\n");
 #endif
 
 	int i = 0;
@@ -152,14 +132,7 @@ void osuPlayer::MainPage::osuLoaded()
 	for (auto bmap : bmaps) {
 #ifdef ENABLE_DEBUG
 #if 0
-		debug->Items->Append("No. " + ++i + ":\t" + bmap->getTitle() + "\n"
-			"artist: " + bmap->getArtist() + ", creator: " + bmap->creator + " [" + bmap->difficulty + "]\n"
-			"audio: Songs/" + bmap->folder + "/" + bmap->audioFile + "\n"
-			".osu: " + bmap->osuFile + "\n"
-			"source: " + bmap->source + "\n");
-#endif
-#if 0
-		debugParams->ViewModel->List->Append("No. " + ++i + ":\t" + bmap->getTitle() + "\n"
+		debugParams->Append("No. " + ++i + ":\t" + bmap->getTitle() + "\n"
 			"artist: " + bmap->getArtist() + ", creator: " + bmap->creator + " [" + bmap->difficulty + "]\n"
 			"audio: Songs/" + bmap->folder + "/" + bmap->audioFile + "\n"
 			".osu: " + bmap->osuFile + "\n"
@@ -185,5 +158,11 @@ Music^ osuPlayer::loadMusicFromBeatmap(IBox<bool>^ useOriginal, ::osu::osuBeatma
 
 void osuPlayer::MainPage::musicSelected(Platform::Object^ sender, Windows::UI::Xaml::Controls::SelectionChangedEventArgs^ e)
 {
-	;
+	auto items = e->AddedItems;
+	if (!items->Size)
+		return;
+	auto music = (Music^)items->GetAt(0);
+	if (music)
+		debugParams->Append("Selected: " + music->Title + "\n" +
+			music->Folder + "/" + music->AudioFile);
 }
