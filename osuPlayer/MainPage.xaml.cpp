@@ -12,7 +12,7 @@
 using namespace osuPlayer;
 using namespace osu;
 
-using namespace concurrency;
+using namespace Concurrency;
 using namespace Platform;
 using namespace Windows::Foundation;
 using namespace Windows::Foundation::Collections;
@@ -21,6 +21,7 @@ using namespace Windows::Storage;
 using namespace Windows::Storage::Pickers;
 using namespace Windows::Media::Core;
 using namespace Windows::Media::Playback;
+using namespace Windows::Security::Cryptography;
 using namespace Windows::UI::Xaml;
 using namespace Windows::UI::Xaml::Controls;
 using namespace Windows::UI::Xaml::Controls::Primitives;
@@ -85,7 +86,7 @@ MainPage::MainPage()
 	}
 }
 
-void osuPlayer::MainPage::test(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e)
+void osuPlayer::MainPage::open(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e)
 {
 	auto picker = ref new FolderPicker();
 	picker->FileTypeFilter->Append(".exe");
@@ -140,8 +141,35 @@ void osuPlayer::MainPage::osuLoaded()
 			"source: " + bmap->source + "\n");
 #endif
 #endif
-		ViewModel->Musics->Append(loadMusicFromBeatmap(ViewModel->_useOriginal(), bmap));
+		if (ViewModel->Musics->Size == 0 ||
+			bmap->folder != ViewModel->Musics->GetAt(ViewModel->Musics->Size - 1)->Folder ||
+			bmap->audioFile != ViewModel->Musics->GetAt(ViewModel->Musics->Size - 1)->AudioFile)
+			ViewModel->Musics->Append(loadMusicFromBeatmap(ViewModel->_useOriginal(), bmap));
 	}
+}
+
+void osuPlayer::MainPage::playMusic(Music ^ music)
+{
+	if (!music)
+		return;
+	debugParams->Append("Selected: " + music->Title + "\n" +
+		music->Folder + "/" + music->AudioFile);
+	create_task(osuData->dirSongs->GetFolderAsync(music->Folder)).then([=](StorageFolder^ folder) {
+		//debugParams->Append(folder ? "GetFolder: Success" : "GetFolder: Failed");
+		return folder->GetFileAsync(music->AudioFile);
+	}).then([&](StorageFile^ file) {
+		//debugParams->Append(file ? ("GetFile: Success: " + file->Path) : "GetFile: Failed");
+		//return file->OpenAsync(FileAccessMode::Read);
+		mediaElement->SetPlaybackSource(MediaSource::CreateFromStorageFile(file));
+#if 0
+	}).then([&](IRandomAccessStream^ stream) {
+		//debugParams->Append(mediaSource ? "mediaSource: Success" : "mediaSource: Failed");
+		debugParams->Append(stream ? "stream: Success" : "stream: Failed");
+		mediaElement->SetSource(stream, audioFile->ContentType);
+#endif
+		//debugParams->Append("Volume: " + mediaElement->Volume);
+		//mediaElement->Play();
+	});
 }
 
 void osuPlayer::MainPage::debugClick(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e)
@@ -160,32 +188,9 @@ Music^ osuPlayer::loadMusicFromBeatmap(IBox<bool>^ useOriginal, ::osu::osuBeatma
 void osuPlayer::MainPage::musicSelected(Platform::Object^ sender, Windows::UI::Xaml::Controls::SelectionChangedEventArgs^ e)
 {
 	auto items = e->AddedItems;
-	if (!items->Size)
-		return;
-	auto music = (Music^)items->GetAt(0);
-	if (music) {
-		debugParams->Append("Selected: " + music->Title + "\n" +
-			music->Folder + "/" + music->AudioFile);
-		create_task(osuData->dirSongs->GetFolderAsync(music->Folder)).then([=](StorageFolder^ folder) {
-			//debugParams->Append(folder ? "GetFolder: Success" : "GetFolder: Failed");
-			return folder->GetFileAsync(music->AudioFile);
-		}).then([&](StorageFile^ file) {
-			//audioFile = file;
-			//debugParams->Append(file ? ("GetFile: Success: " + file->Path) : "GetFile: Failed");
-			//return file->OpenAsync(FileAccessMode::Read);
-			mediaElement->SetPlaybackSource(MediaSource::CreateFromStorageFile(file));
-#if 0
-		}).then([&](IRandomAccessStream^ stream) {
-			//debugParams->Append(mediaSource ? "mediaSource: Success" : "mediaSource: Failed");
-			debugParams->Append(stream ? "stream: Success" : "stream: Failed");
-			mediaElement->SetSource(stream, audioFile->ContentType);
-#endif
-			//debugParams->Append("Volume: " + mediaElement->Volume);
-			//mediaElement->Play();
-		});
-	}
+	if (items->Size)
+		playMusic((Music^)items->GetAt(0));
 }
-
 
 void osuPlayer::MainPage::mediaStateChanged(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e)
 {
@@ -209,4 +214,23 @@ void osuPlayer::MainPage::mediaStateChanged(Platform::Object^ sender, Windows::U
 		debugParams->Append("MediaElementState::Stopped");
 		break;
 	}
+}
+
+void osuPlayer::MainPage::mediaEnded(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e)
+{
+	debugParams->Append("mediaEnded: " + mediaElement->Position.Duration);
+#if 0
+	if (!mediaElement->Position.Duration)
+		return;
+#endif
+	shuffle();
+}
+
+
+void osuPlayer::MainPage::shuffle(Platform::Object^ sender, Windows::UI::Xaml::Input::TappedRoutedEventArgs^ e)
+{
+	auto i = CryptographicBuffer::GenerateRandomNumber() % playlist->Items->Size;
+	auto item = playlist->Items->GetAt(i);
+	playlist->SelectedItem = item;
+	playlist->ScrollIntoView(item);
 }

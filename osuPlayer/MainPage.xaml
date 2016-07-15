@@ -8,11 +8,6 @@
     mc:Ignorable="d">
 
     <RelativePanel x:Name="panel" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
-        <StackPanel RelativePanel.AlignHorizontalCenterWithPanel="True" RelativePanel.AlignVerticalCenterWithPanel="True">
-            <Button Content="Open" FontSize="60"
-                    IsEnabled="{x:Bind ViewModel.IsLoading.nIsLoading, Mode=OneWay}"
-                    Click="test"/>
-        </StackPanel>
         <Rectangle Fill="white" Opacity="0.5"
                    Visibility="{x:Bind ViewModel.IsLoading.IsVisible, Mode=OneWay}"
                    RelativePanel.AlignTopWithPanel="True" RelativePanel.AlignBottomWithPanel="True"
@@ -35,31 +30,60 @@
                           Visibility="{x:Bind ViewModel.IsLoading.IsVisible, Mode=OneWay}"
                           HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
         </Grid>
-        <RelativePanel RelativePanel.AlignTopWithPanel="True" RelativePanel.AlignBottomWithPanel="True"
-                       RelativePanel.AlignLeftWithPanel="True" RelativePanel.AlignRightWithPanel="True">
-            <ListView x:Name="playlist" Width="320"
-                      RelativePanel.AlignLeftWithPanel="True"
-                      RelativePanel.AlignTopWithPanel="True" RelativePanel.AlignBottomWithPanel="True"
-                      ItemsSource="{x:Bind ViewModel.Musics, Mode=OneWay}" SelectionChanged="musicSelected">
-                <ListView.ItemTemplate>
-                    <DataTemplate x:DataType="local:Music">
-                        <StackPanel Orientation="Horizontal" Margin="4">
-                            <SymbolIcon Symbol="Audio" Margin="0,0,12,0"/>
-                            <StackPanel>
-                                <TextBlock Text="{x:Bind Title}" FontWeight="Bold"/>
-                                <TextBlock Text="{x:Bind Artist}"/>
+        
+        <Grid RelativePanel.AlignTopWithPanel="True" RelativePanel.AlignBottomWithPanel="True"
+              RelativePanel.AlignLeftWithPanel="True" RelativePanel.AlignRightWithPanel="True">
+            <Grid.RowDefinitions>
+                <RowDefinition/>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="320"/>
+                <ColumnDefinition/>
+            </Grid.ColumnDefinitions>
+            <Grid Grid.Column="0"
+                  Background="{StaticResource SystemControlBackgroundChromeMediumLowBrush}">
+                <Grid.RowDefinitions>
+                    <RowDefinition/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <ListView x:Name="playlist" Grid.Row="0"
+                          ItemsSource="{x:Bind ViewModel.Musics, Mode=OneWay}"
+                          SelectionChanged="musicSelected">
+                    <ListView.ItemTemplate>
+                        <DataTemplate x:DataType="local:Music">
+                            <StackPanel Orientation="Horizontal" Margin="4">
+                                <SymbolIcon Symbol="Audio" Margin="0,0,12,0"/>
+                                <StackPanel>
+                                    <TextBlock Text="{x:Bind Title}" FontWeight="Bold"/>
+                                    <TextBlock Text="{x:Bind Artist}"/>
+                                </StackPanel>
                             </StackPanel>
-                        </StackPanel>
-                    </DataTemplate>
-                </ListView.ItemTemplate>
-            </ListView>
-            <MediaElement x:Name="mediaElement" AutoPlay="True" AreTransportControlsEnabled="True"
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+                <Border BorderThickness="1" Height="1" Width="Auto" Grid.Row="1"
+                        HorizontalAlignment="Stretch" Margin="12,0"
+                        BorderBrush="{StaticResource SystemControlBackgroundBaseLowBrush}"/>
+                <Grid Grid.Row="2">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <SymbolIcon Grid.Column="0" Symbol="Shuffle" Width="48" Height="48" Tapped="shuffle"/>
+                    <SymbolIcon Grid.Column="2" Symbol="OpenLocal" Width="48" Height="48" Tapped="open"/>
+                </Grid>
+            </Grid>
+            <MediaElement x:Name="mediaElement" Grid.Column="1"
+                          AutoPlay="True" AreTransportControlsEnabled="True"
                           RelativePanel.RightOf="playlist" RelativePanel.AlignRightWithPanel="True"
                           RelativePanel.AlignTopWithPanel="True" RelativePanel.AlignBottomWithPanel="True"
-                          CurrentStateChanged="mediaStateChanged"/>
-        </RelativePanel>
-        <Button Content="DEBUG" FontSize="32"
+                          CurrentStateChanged="mediaStateChanged" MediaEnded="mediaEnded"/>
+        </Grid>
+        
+        <!-- <Button Content="DEBUG" FontSize="32"
                 RelativePanel.AlignBottomWithPanel="True" RelativePanel.AlignRightWithPanel="True"
-                Click="debugClick"/>
+                Click="debugClick"/> -->
     </RelativePanel>
 </Page>

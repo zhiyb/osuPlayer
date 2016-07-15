@@ -11,8 +11,10 @@
 
 namespace osuPlayer
 {
+	using namespace Concurrency;
 	using namespace Platform;
 	using namespace Platform::Collections;
+	using namespace Windows::Foundation;
 	using namespace Windows::Foundation::Collections;
 	using namespace Windows::Storage;
 	using namespace Windows::UI::Xaml;
@@ -97,12 +99,15 @@ namespace osuPlayer
 		property osuPlayer::ViewModel^ ViewModel {osuPlayer::ViewModel^ get() { return viewModel; }}
 
 	private:
-		void test(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e);
+		void open(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e);
 		void changeDir(Windows::Storage::StorageFolder^ dir);
 		void osuLoaded();
+		void playMusic(Music^ music);
 		void debugClick(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e);
 		void musicSelected(Platform::Object^ sender, Windows::UI::Xaml::Controls::SelectionChangedEventArgs^ e);
 		void mediaStateChanged(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e);
+		void mediaEnded(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e);
+		void shuffle(Platform::Object^ sender = nullptr, Windows::UI::Xaml::Input::TappedRoutedEventArgs^ e = nullptr);
 
 		::Debug::DebugParams^ debugParams;
 
