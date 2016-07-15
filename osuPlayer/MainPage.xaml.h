@@ -14,6 +14,7 @@ namespace osuPlayer
 	using namespace Platform;
 	using namespace Platform::Collections;
 	using namespace Windows::Foundation::Collections;
+	using namespace Windows::Storage;
 	using namespace Windows::UI::Xaml;
 	using namespace Windows::UI::Xaml::Data;
 
@@ -101,9 +102,11 @@ namespace osuPlayer
 		void osuLoaded();
 		void debugClick(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e);
 		void musicSelected(Platform::Object^ sender, Windows::UI::Xaml::Controls::SelectionChangedEventArgs^ e);
+		void mediaStateChanged(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e);
 
 		::Debug::DebugParams^ debugParams;
 
+		StorageFile^ audioFile;
 		osuPlayer::ViewModel^ viewModel;
 		::osu::osu *osuData;
 	};

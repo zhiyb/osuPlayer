@@ -35,22 +35,29 @@
                           Visibility="{x:Bind ViewModel.IsLoading.IsVisible, Mode=OneWay}"
                           HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
         </Grid>
-        <ListView x:Name="playlist" Width="320"
-                  RelativePanel.AlignLeftWithPanel="True"
-                  RelativePanel.AlignTopWithPanel="True" RelativePanel.AlignBottomWithPanel="True"
-                  ItemsSource="{x:Bind ViewModel.Musics, Mode=OneWay}" SelectionChanged="musicSelected">
-            <ListView.ItemTemplate>
-                <DataTemplate x:DataType="local:Music">
-                    <StackPanel Orientation="Horizontal" Margin="4">
-                        <SymbolIcon Symbol="Audio" Margin="0,0,12,0"/>
-                        <StackPanel>
-                            <TextBlock Text="{x:Bind Title}" FontWeight="Bold"/>
-                            <TextBlock Text="{x:Bind Artist}"/>
+        <RelativePanel RelativePanel.AlignTopWithPanel="True" RelativePanel.AlignBottomWithPanel="True"
+                       RelativePanel.AlignLeftWithPanel="True" RelativePanel.AlignRightWithPanel="True">
+            <ListView x:Name="playlist" Width="320"
+                      RelativePanel.AlignLeftWithPanel="True"
+                      RelativePanel.AlignTopWithPanel="True" RelativePanel.AlignBottomWithPanel="True"
+                      ItemsSource="{x:Bind ViewModel.Musics, Mode=OneWay}" SelectionChanged="musicSelected">
+                <ListView.ItemTemplate>
+                    <DataTemplate x:DataType="local:Music">
+                        <StackPanel Orientation="Horizontal" Margin="4">
+                            <SymbolIcon Symbol="Audio" Margin="0,0,12,0"/>
+                            <StackPanel>
+                                <TextBlock Text="{x:Bind Title}" FontWeight="Bold"/>
+                                <TextBlock Text="{x:Bind Artist}"/>
+                            </StackPanel>
                         </StackPanel>
-                    </StackPanel>
-                </DataTemplate>
-            </ListView.ItemTemplate>
-        </ListView>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
+            <MediaElement x:Name="mediaElement" AutoPlay="True" AreTransportControlsEnabled="True"
+                          RelativePanel.RightOf="playlist" RelativePanel.AlignRightWithPanel="True"
+                          RelativePanel.AlignTopWithPanel="True" RelativePanel.AlignBottomWithPanel="True"
+                          CurrentStateChanged="mediaStateChanged"/>
+        </RelativePanel>
         <Button Content="DEBUG" FontSize="32"
                 RelativePanel.AlignBottomWithPanel="True" RelativePanel.AlignRightWithPanel="True"
                 Click="debugClick"/>

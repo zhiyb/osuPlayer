@@ -10,26 +10,27 @@
 #define ENABLE_DEBUG
 
 using namespace osuPlayer;
+using namespace osu;
 
+using namespace concurrency;
 using namespace Platform;
 using namespace Windows::Foundation;
 using namespace Windows::Foundation::Collections;
+using namespace Windows::ApplicationModel::Core;
+using namespace Windows::Storage;
+using namespace Windows::Storage::Pickers;
+using namespace Windows::Media::Core;
+using namespace Windows::Media::Playback;
 using namespace Windows::UI::Xaml;
 using namespace Windows::UI::Xaml::Controls;
 using namespace Windows::UI::Xaml::Controls::Primitives;
 using namespace Windows::UI::Xaml::Data;
 using namespace Windows::UI::Xaml::Input;
+using namespace Windows::UI::Xaml::Interop;
 using namespace Windows::UI::Xaml::Media;
 using namespace Windows::UI::Xaml::Navigation;
-
-using namespace osu;
-using namespace concurrency;
-using namespace Windows::ApplicationModel::Core;
 using namespace Windows::UI::Popups;
 using namespace Windows::UI::ViewManagement;
-using namespace Windows::UI::Xaml::Interop;
-using namespace Windows::Storage;
-using namespace Windows::Storage::Pickers;
 
 MainPage::MainPage()
 {
@@ -162,7 +163,50 @@ void osuPlayer::MainPage::musicSelected(Platform::Object^ sender, Windows::UI::X
 	if (!items->Size)
 		return;
 	auto music = (Music^)items->GetAt(0);
-	if (music)
+	if (music) {
 		debugParams->Append("Selected: " + music->Title + "\n" +
 			music->Folder + "/" + music->AudioFile);
+		create_task(osuData->dirSongs->GetFolderAsync(music->Folder)).then([=](StorageFolder^ folder) {
+			//debugParams->Append(folder ? "GetFolder: Success" : "GetFolder: Failed");
+			return folder->GetFileAsync(music->AudioFile);
+		}).then([&](StorageFile^ file) {
+			//audioFile = file;
+			//debugParams->Append(file ? ("GetFile: Success: " + file->Path) : "GetFile: Failed");
+			//return file->OpenAsync(FileAccessMode::Read);
+			mediaElement->SetPlaybackSource(MediaSource::CreateFromStorageFile(file));
+#if 0
+		}).then([&](IRandomAccessStream^ stream) {
+			//debugParams->Append(mediaSource ? "mediaSource: Success" : "mediaSource: Failed");
+			debugParams->Append(stream ? "stream: Success" : "stream: Failed");
+			mediaElement->SetSource(stream, audioFile->ContentType);
+#endif
+			//debugParams->Append("Volume: " + mediaElement->Volume);
+			//mediaElement->Play();
+		});
+	}
+}
+
+
+void osuPlayer::MainPage::mediaStateChanged(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e)
+{
+	switch (mediaElement->CurrentState) {
+	case MediaElementState::Closed:
+		debugParams->Append("MediaElementState::Closed");
+		break;
+	case MediaElementState::Opening:
+		debugParams->Append("MediaElementState::Opening");
+		break;
+	case MediaElementState::Buffering:
+		debugParams->Append("MediaElementState::Buffering");
+		break;
+	case MediaElementState::Playing:
+		debugParams->Append("MediaElementState::Playing");
+		break;
+	case MediaElementState::Paused:
+		debugParams->Append("MediaElementState::Paused");
+		break;
+	case MediaElementState::Stopped:
+		debugParams->Append("MediaElementState::Stopped");
+		break;
+	}
 }
