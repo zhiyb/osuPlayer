@@ -26,21 +26,29 @@ namespace osuPlayer
 		Music(IBox<bool>^ useOriginal,
 			String^ artist, String^ artistOriginal,
 			String^ title, String^ titleOriginal,
-			String^ folder, String^ audioFile) :
+			String^ folder, String^ audioFile,
+			int bmapID) :
 			useOriginal(useOriginal),
 			artist(artist), artistOriginal(artistOriginal),
 			title(title), titleOriginal(titleOriginal),
-			folder(folder), audioFile(audioFile) {}
+			folder(folder), audioFile(audioFile),
+			bmapID(bmapID) {}
 
+		property String^ ArtistOriginal {String^ get() { return artistOriginal; }}
+		property String^ TitleOriginal {String^ get() { return titleOriginal; }}
+		property String^ ArtistEng {String^ get() { return artist; }}
+		property String^ TitleEng {String^ get() { return title; }}
 		property String^ Artist {String^ get() { return (useOriginal && artistOriginal) ? artistOriginal : artist; }}
 		property String^ Title {String^ get() { return (useOriginal && titleOriginal) ? titleOriginal : title; }}
 		property String^ Folder {String^ get() { return folder; }}
 		property String^ AudioFile {String^ get() { return audioFile; }}
+		property int BeatmapID {int get() { return bmapID; }}
 
 	private:
 		String ^artist, ^artistOriginal;
 		String ^title, ^titleOriginal;
 		String ^folder, ^audioFile;
+		int bmapID;
 		IBox<bool>^ useOriginal;
 	};
 

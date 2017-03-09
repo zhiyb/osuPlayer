@@ -120,18 +120,22 @@ void osuPlayer::MainPage::open(Platform::Object^ sender, Windows::UI::Xaml::Rout
 void osuPlayer::MainPage::osuLoaded()
 {
 	auto o = osuData;
-#ifdef ENABLE_DEBUG
-	debugParams->Append("osu! Version: " + o->db.version + "\n"
-		"Folders: " + o->db.folderCount + "\n"
-		"Unlocked: " + o->db.unlocked + "\n"
-		"Player name: " + o->db.playerName + "\n"
-		"Beatmaps: " + o->db.bmapCount + "\n");
-#endif
 
 	int i = 0;
 	int count = o->db.bmapCount;
 	auto bmaps = o->db.bmaps;
-	for (auto bmap : bmaps) {
+
+	IVector<Music^> ^musics = ref new Vector<Music^>;
+	for (auto bmap: bmaps)
+		musics->Append(loadMusicFromBeatmap(ViewModel->_useOriginal(), bmap));
+	std::sort(begin(musics), end(musics), [](Music^ left, Music^ right) {
+		if (left->Title == right->Title)
+			return left->Artist < right->Artist;
+		else
+			return left->Title < right->Title;
+	});
+
+	for (auto music: musics) {
 #ifdef ENABLE_DEBUG
 #if 0
 		debugParams->Append("No. " + ++i + ":\t" + bmap->getTitle() + "\n"
@@ -141,11 +145,27 @@ void osuPlayer::MainPage::osuLoaded()
 			"source: " + bmap->source + "\n");
 #endif
 #endif
-		if (ViewModel->Musics->Size == 0 ||
-			bmap->folder != ViewModel->Musics->GetAt(ViewModel->Musics->Size - 1)->Folder ||
-			bmap->audioFile != ViewModel->Musics->GetAt(ViewModel->Musics->Size - 1)->AudioFile)
-			ViewModel->Musics->Append(loadMusicFromBeatmap(ViewModel->_useOriginal(), bmap));
+		if (ViewModel->Musics->Size == 0) {
+			ViewModel->Musics->Append(music);
+			continue;
+		}
+
+		auto prev = ViewModel->Musics->GetAt(ViewModel->Musics->Size - 1);
+		if ((music->TitleOriginal != prev->TitleOriginal && music->TitleEng != prev->TitleEng) || \
+			(music->ArtistOriginal != prev->ArtistOriginal && music->ArtistEng != prev->ArtistEng)) {
+			ViewModel->Musics->Append(music);
+			i++;
+		}
 	}
+
+#ifdef ENABLE_DEBUG
+	debugParams->Append("osu! Version: " + o->db.version + "\n"
+		"Folders: " + o->db.folderCount + "\n"
+		"Unlocked: " + o->db.unlocked + "\n"
+		"Player name: " + o->db.playerName + "\n"
+		"Beatmaps: " + o->db.bmapCount + "\n"
+		"Musics: " + i);
+#endif
 }
 
 void osuPlayer::MainPage::playMusic(Music ^ music)
@@ -182,7 +202,8 @@ Music^ osuPlayer::loadMusicFromBeatmap(IBox<bool>^ useOriginal, ::osu::osuBeatma
 	return ref new Music(useOriginal,
 		bmap->artist, bmap->artistUnicode,
 		bmap->title, bmap->titleUnicode,
-		bmap->folder, bmap->audioFile);
+		bmap->folder, bmap->audioFile,
+		bmap->bmapID);
 }
 
 void osuPlayer::MainPage::musicSelected(Platform::Object^ sender, Windows::UI::Xaml::Controls::SelectionChangedEventArgs^ e)

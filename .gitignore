@@ -1,0 +1,12 @@
+.vs/
+ipch/
+Debug/
+*/Debug/
+x64/
+*/x64/
+*/Generated Files/
+
+*.db
+*.sdf
+*.vcxproj.filters
+*.pfx
