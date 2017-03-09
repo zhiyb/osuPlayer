@@ -34,15 +34,30 @@ namespace osuPlayer
 			folder(folder), audioFile(audioFile),
 			bmapID(bmapID) {}
 
-		property String^ ArtistOriginal {String^ get() { return artistOriginal; }}
-		property String^ TitleOriginal {String^ get() { return titleOriginal; }}
-		property String^ ArtistEng {String^ get() { return artist; }}
-		property String^ TitleEng {String^ get() { return title; }}
-		property String^ Artist {String^ get() { return (useOriginal && artistOriginal) ? artistOriginal : artist; }}
-		property String^ Title {String^ get() { return (useOriginal && titleOriginal) ? titleOriginal : title; }}
+		property String^ ArtistOriginal {String^ get() { return artistOriginal ? artistOriginal : artist; }}
+		property String^ TitleOriginal {String^ get() { return titleOriginal ? titleOriginal : title; }}
+		property String^ ArtistEng {String^ get() { return artist ? artist : artistOriginal; }}
+		property String^ TitleEng {String^ get() { return title ? title : titleOriginal; }}
+		property String^ Artist {String^ get() { return useOriginal ? ArtistOriginal : ArtistEng; }}
+		property String^ Title {String^ get() { return useOriginal ? TitleOriginal : TitleEng; }}
+
 		property String^ Folder {String^ get() { return folder; }}
 		property String^ AudioFile {String^ get() { return audioFile; }}
 		property int BeatmapID {int get() { return bmapID; }}
+
+		bool Equals(Music^ m)
+		{
+			if (BeatmapID == m->BeatmapID)
+				return true;
+			if (Folder == m->Folder && AudioFile == m->AudioFile)
+				return true;
+			if (_wcsicmp(TitleEng->Data(), m->TitleEng->Data()) == 0 ||
+				_wcsicmp(TitleOriginal->Data(), m->TitleOriginal->Data()) == 0)
+				if (_wcsicmp(ArtistEng->Data(), m->ArtistEng->Data()) == 0 ||
+					_wcsicmp(ArtistOriginal->Data(), m->ArtistOriginal->Data()) == 0)
+					return true;
+			return false;
+		}
 
 	private:
 		String ^artist, ^artistOriginal;

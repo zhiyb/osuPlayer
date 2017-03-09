@@ -128,11 +128,19 @@ void osuPlayer::MainPage::osuLoaded()
 	IVector<Music^> ^musics = ref new Vector<Music^>;
 	for (auto bmap: bmaps)
 		musics->Append(loadMusicFromBeatmap(ViewModel->_useOriginal(), bmap));
-	std::sort(begin(musics), end(musics), [](Music^ left, Music^ right) {
-		if (left->Title == right->Title)
-			return left->Artist < right->Artist;
-		else
-			return left->Title < right->Title;
+	std::stable_sort(begin(musics), end(musics), [](Music^ l, Music^ r) {
+		if (l->Equals(r))
+			return false;
+		int res;
+		if ((res = _wcsicmp(l->TitleEng->Data(), r->TitleEng->Data())) != 0)
+			return res < 0;
+		if ((res = _wcsicmp(l->TitleOriginal->Data(), r->TitleOriginal->Data())) != 0)
+			return res < 0;
+		if ((res = _wcsicmp(l->ArtistEng->Data(), r->ArtistEng->Data())) != 0)
+			return res < 0;
+		if ((res = _wcsicmp(l->ArtistOriginal->Data(), r->ArtistOriginal->Data())) != 0)
+			return res < 0;
+		return l->BeatmapID < r->BeatmapID;
 	});
 
 	for (auto music: musics) {
@@ -151,8 +159,7 @@ void osuPlayer::MainPage::osuLoaded()
 		}
 
 		auto prev = ViewModel->Musics->GetAt(ViewModel->Musics->Size - 1);
-		if ((music->TitleOriginal != prev->TitleOriginal && music->TitleEng != prev->TitleEng) || \
-			(music->ArtistOriginal != prev->ArtistOriginal && music->ArtistEng != prev->ArtistEng)) {
+		if (!music->Equals(prev)) {
 			ViewModel->Musics->Append(music);
 			i++;
 		}
@@ -172,8 +179,11 @@ void osuPlayer::MainPage::playMusic(Music ^ music)
 {
 	if (!music)
 		return;
-	debugParams->Append("Selected: " + music->Title + "\n" +
-		music->Folder + "/" + music->AudioFile);
+	debugParams->Append("TitleEng: " + music->TitleEng + "\n" +
+		"TitleOriginal: " + music->TitleOriginal + "\n" +
+		"ArtistEng: " + music->ArtistEng + "\n" +
+		"ArtistOriginal: " + music->ArtistOriginal + "\n" +
+		"File: " + music->Folder + "/" + music->AudioFile);
 	create_task(osuData->dirSongs->GetFolderAsync(music->Folder)).then([=](StorageFolder^ folder) {
 		//debugParams->Append(folder ? "GetFolder: Success" : "GetFolder: Failed");
 		return folder->GetFileAsync(music->AudioFile);
